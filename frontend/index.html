@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小宇宙播客转文字 - AI智能转录平台</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #6366f1; --primary-dark: #4f46e5; --primary-light: #818cf8;
+            --success: #10b981; --warning: #f59e0b; --error: #ef4444; --info: #3b82f6;
+            --bg: #0f172a; --bg-card: #1e293b; --bg-hover: #334155;
+            --text: #f8fafc; --text-secondary: #94a3b8; --border: #334155;
+        }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
+        .header { background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg) 100%); border-bottom: 1px solid var(--border); padding: 1rem 2rem; position: sticky; top: 0; z-index: 100; }
+        .header-content { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .logo { display: flex; align-items: center; gap: 0.75rem; font-size: 1.5rem; font-weight: 700; color: var(--primary-light); }
+        .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; }
+        .nav-links { display: flex; gap: 2rem; }
+        .nav-link { color: var(--text-secondary); text-decoration: none; font-weight: 500; transition: color 0.2s; }
+        .nav-link:hover, .nav-link.active { color: var(--primary-light); }
+        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+        .hero { text-align: center; padding: 3rem 0; }
+        .hero h1 { font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; background: linear-gradient(135deg, var(--text) 0%, var(--primary-light) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .hero p { color: var(--text-secondary); font-size: 1.125rem; max-width: 600px; margin: 0 auto 2rem; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; text-align: center; }
+        .stat-value { font-size: 2rem; font-weight: 700; color: var(--primary-light); }
+        .stat-label { color: var(--text-secondary); font-size: 0.875rem; margin-top: 0.25rem; }
+        .tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1px; }
+        .tab { padding: 0.75rem 1.5rem; background: transparent; border: none; color: var(--text-secondary); font-size: 0.875rem; font-weight: 500; cursor: pointer; border-radius: 8px 8px 0 0; transition: all 0.2s; }
+        .tab:hover { color: var(--text); background: var(--bg-hover); }
+        .tab.active { color: var(--primary-light); background: var(--bg-card); border-bottom: 2px solid var(--primary); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; margin-bottom: 2rem; }
+        .card-title { font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-label { display: block; font-weight: 500; margin-bottom: 0.5rem; color: var(--text); }
+        .form-label .optional { color: var(--text-secondary); font-weight: 400; font-size: 0.875rem; }
+        .form-input { width: 100%; padding: 0.875rem 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 0.9375rem; transition: all 0.2s; }
+        .form-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); }
+        .form-input::placeholder { color: var(--text-secondary); }
+        textarea.form-input { min-height: 100px; resize: vertical; }
+        .form-select { width: 100%; padding: 0.875rem 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 0.9375rem; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; padding-right: 2.5rem; }
+        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+        .checkbox-group { display: flex; flex-wrap: wrap; gap: 1rem; }
+        .checkbox-item { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
+        .checkbox-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--primary); }
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.875rem 1.5rem; font-size: 0.9375rem; font-weight: 600; border: none; border-radius: 10px; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4); }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .btn-secondary { background: var(--bg-hover); color: var(--text); }
+        .btn-secondary:hover { background: var(--border); }
+        .btn-success { background: var(--success); color: white; }
+        .task-list { display: flex; flex-direction: column; gap: 1rem; }
+        .task-item { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; transition: all 0.2s; }
+        .task-item:hover { border-color: var(--primary); }
+        .task-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
+        .task-info { flex: 1; }
+        .task-id { font-family: monospace; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem; }
+        .task-url { font-size: 0.875rem; color: var(--text); word-break: break-all; }
+        .task-status { display: flex; align-items: center; gap: 0.5rem; padding: 0.375rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+        .status-pending { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+        .status-processing { background: rgba(59, 130, 246, 0.15); color: var(--info); }
+        .status-completed { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+        .status-failed { background: rgba(239, 68, 68, 0.15); color: var(--error); }
+        .task-progress { margin-bottom: 1rem; }
+        .progress-bar { height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--primary-light)); border-radius: 3px; transition: width 0.3s ease; }
+        .progress-text { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem; }
+        .task-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .task-action-btn { padding: 0.5rem 0.875rem; font-size: 0.8125rem; font-weight: 500; border: 1px solid var(--border); background: var(--bg); color: var(--text); border-radius: 8px; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+        .task-action-btn:hover { background: var(--bg-hover); border-color: var(--primary); }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 2rem; opacity: 0; visibility: hidden; transition: all 0.3s; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 900px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; transform: scale(0.95); transition: transform 0.3s; }
+        .modal-overlay.active .modal { transform: scale(1); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; border-bottom: 1px solid var(--border); }
+        .modal-title { font-size: 1.25rem; font-weight: 600; }
+        .modal-close { background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; padding: 0.25rem; transition: color 0.2s; }
+        .modal-close:hover { color: var(--text); }
+        .modal-body { padding: 1.5rem; overflow-y: auto; flex: 1; }
+        .result-tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); }
+        .result-tab { padding: 0.5rem 1rem; background: none; border: none; color: var(--text-secondary); font-size: 0.875rem; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+        .result-tab:hover { color: var(--text); }
+        .result-tab.active { color: var(--primary-light); border-bottom-color: var(--primary); }
+        .result-content { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; max-height: 400px; overflow-y: auto; font-family: 'Monaco', 'Menlo', monospace; font-size: 0.875rem; line-height: 1.7; white-space: pre-wrap; }
+        .dialogue-turn { margin-bottom: 1rem; padding: 1rem; background: var(--bg-card); border-radius: 8px; border-left: 3px solid var(--primary); }
+        .dialogue-speaker { font-weight: 600; color: var(--primary-light); margin-bottom: 0.25rem; }
+        .dialogue-time { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.5rem; }
+        .dialogue-text { color: var(--text); }
+        .empty-state { text-align: center; padding: 4rem 2rem; color: var(--text-secondary); }
+        .empty-icon { font-size: 4rem; margin-bottom: 1rem; opacity: 0.5; }
+        .toast-container { position: fixed; top: 1rem; right: 1rem; z-index: 1100; display: flex; flex-direction: column; gap: 0.5rem; }
+        .toast { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; display: flex; align-items: center; gap: 0.75rem; min-width: 300px; animation: slideIn 0.3s ease; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .toast-success { border-left: 4px solid var(--success); }
+        .toast-error { border-left: 4px solid var(--error); }
+        .toast-info { border-left: 4px solid var(--info); }
+
+        @media (max-width: 768px) { .header-content { flex-direction: column; gap: 1rem; } .nav-links { gap: 1rem; } .hero h1 { font-size: 1.75rem; } .container { padding: 1rem; } .card { padding: 1.25rem; } .task-header { flex-direction: column; gap: 0.75rem; } }
+        .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">🎙️</div>
+                <span>小宇宙转文字</span>
+            </div>
+            <nav class="nav-links">
+                <a href="#" class="nav-link active" onclick="showTab('transcribe', this)">转录</a>
+                <a href="#" class="nav-link" onclick="showTab('tasks', this)">任务列表</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="hero">
+            <h1>AI 智能音视频转录平台</h1>
+            <p>支持小宇宙、B站、YouTube 等平台，自动说话人分离，持续学习优化</p>
+        </section>
+
+        <div class="stats-grid" id="stats">
+            <div class="stat-card"><div class="stat-value" id="stat-total">0</div><div class="stat-label">总任务数</div></div>
+            <div class="stat-card"><div class="stat-value" id="stat-completed">0</div><div class="stat-label">已完成</div></div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('transcribe')">📝 新建转录</button>
+            <button class="tab" onclick="showTab('tasks')">📋 任务列表</button>
+        </div>
+
+        <!-- Tab: New Transcription -->
+        <div id="tab-transcribe" class="tab-content active">
+            <div class="card">
+                <h2 class="card-title">🎯 创建转录任务</h2>
+                <form id="transcribe-form">
+                    <div class="form-group">
+                        <label class="form-label">音视频链接 *</label>
+                        <input type="url" class="form-input" id="url" placeholder="https://www.xiaoyuzhoufm.com/episode/..." required>
+                        <small style="color: var(--text-secondary); font-size: 0.8125rem; margin-top: 0.25rem; display: block;">支持：小宇宙播客、Bilibili、YouTube</small>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">语言</label>
+                            <select class="form-select" id="language"><option value="zh">中文</option><option value="en">English</option><option value="ja">日本語</option><option value="ko">한국어</option><option value="auto">自动检测</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">处理模式</label>
+                            <select class="form-select" id="processing-mode"><option value="hybrid">混合模式（推荐）</option><option value="rule_only">仅本地规则</option><option value="llm_only">仅LLM处理</option></select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">初始提示词 <span class="optional">（可选）</span></label>
+                        <textarea class="form-input" id="initial-prompt" placeholder="例如：这是一期关于AI技术的播客，嘉宾包括张三和李四..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">热词 <span class="optional">（可选，用逗号分隔）</span></label>
+                        <input type="text" class="form-input" id="hotwords" placeholder="ChatGPT, OpenAI, 深度学习, Transformer">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">输出格式</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item"><input type="checkbox" id="format-srt" checked><span>SRT 字幕</span></label>
+                            <label class="checkbox-item"><input type="checkbox" id="format-vtt" checked><span>VTT 字幕</span></label>
+                            <label class="checkbox-item"><input type="checkbox" id="format-md" checked><span>Markdown 文档</span></label>
+                            <label class="checkbox-item"><input type="checkbox" id="format-txt"><span>纯文本</span></label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-item"><input type="checkbox" id="generate-summary" checked><span>生成结构化摘要（TL;DR、要点、章节）</span></label>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="submit-btn"><span>🚀 开始转录</span></button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">🔧 快速测试</h2>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button class="btn btn-secondary" onclick="loadSample()">加载示例链接</button>
+                    <button class="btn btn-secondary" onclick="testAPI()">测试 API 连接</button>
+                </div>
+                <div id="test-result" style="margin-top: 1rem; font-family: monospace; font-size: 0.8125rem;"></div>
+            </div>
+        </div>
+
+        <!-- Tab: Tasks -->
+        <div id="tab-tasks" class="tab-content">
+            <div class="card">
+                <h2 class="card-title" style="margin-bottom: 1.5rem;">📋 转录任务</h2>
+                <div id="task-list" class="task-list">
+                    <div class="empty-state"><div class="empty-icon">📭</div><p>暂无任务，点击"新建转录"开始</p></div>
+                </div>
+            </div>
+        </div>
+
+
+    </main>
+
+    <!-- Results Modal -->
+    <div class="modal-overlay" id="result-modal">
+        <div class="modal">
+            <div class="modal-header"><h3 class="modal-title">📄 转录结果</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+            <div class="modal-body">
+                <div class="result-tabs">
+                    <button class="result-tab active" onclick="showResultTab('dialogue')">对话</button>
+                    <button class="result-tab" onclick="showResultTab('files')">下载</button>
+                </div>
+                <div id="result-dialogue" class="result-content"></div>
+                <div id="result-files" style="display: none;"><div style="display: grid; gap: 0.75rem;" id="download-links"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+        let tasks = [], skills = [], currentResult = null, pollInterval = 5000, pollTimer = null;
+
+        document.addEventListener('DOMContentLoaded', () => { loadTasks(); updateStats(); startSmartPolling(); });
+
+        function startSmartPolling() {
+            if (pollTimer) clearInterval(pollTimer);
+            pollTimer = setInterval(async () => { await loadTasks(); await updateStats(); 
+                const hasActive = tasks.some(t => t.status === 'STARTED'), hasPending = tasks.some(t => t.status === 'PENDING');
+                // Faster polling when tasks are active (1 second)
+                if (hasActive && pollInterval !== 1000) { pollInterval = 1000; startSmartPolling(); }
+                else if (!hasActive && hasPending && pollInterval !== 3000) { pollInterval = 3000; startSmartPolling(); }
+                else if (!hasActive && !hasPending && pollInterval !== 10000) { pollInterval = 10000; startSmartPolling(); }
+            }, pollInterval);
+        }
+
+        function showTab(tabName, clickedTab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            if (!clickedTab) clickedTab = document.querySelector(`.tab[onclick*="'${tabName}'"]`);
+            if (clickedTab) clickedTab.classList.add('active');
+            if (tabName === 'tasks') loadTasks();
+        }
+
+        document.getElementById('transcribe-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = true; btn.innerHTML = '<div class="spinner"></div> 提交中...';
+            try {
+                const formats = [];
+                if (document.getElementById('format-srt').checked) formats.push('srt');
+                if (document.getElementById('format-vtt').checked) formats.push('vtt');
+                if (document.getElementById('format-md').checked) formats.push('md');
+                if (document.getElementById('format-txt').checked) formats.push('txt');
+                
+                const payload = { url: document.getElementById('url').value, language: document.getElementById('language').value, initial_prompt: document.getElementById('initial-prompt').value, hotwords: document.getElementById('hotwords').value, output_formats: formats, processing_mode: document.getElementById('processing-mode').value, generate_summary: document.getElementById('generate-summary').checked };
+                
+                const response = await fetch(`${API_BASE}/transcribe`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                const data = await response.json();
+                
+                if (response.ok) { showToast('success', '任务创建成功！'); document.getElementById('transcribe-form').reset(); showTab('tasks'); loadTasks(); }
+                else { showToast('error', data.detail || '创建失败'); }
+            } catch (err) { showToast('error', '网络错误：' + err.message + ' (请确保后端服务已启动: python launcher.py)'); }
+            finally { btn.disabled = false; btn.innerHTML = '<span>🚀 开始转录</span>'; }
+        });
+
+        async function loadTasks() {
+            try { const response = await fetch(`${API_BASE}/tasks?page=1&page_size=20`); const data = await response.json(); tasks = data.tasks || []; renderTasks(); } 
+            catch (err) { console.error('Failed to load tasks:', err); }
+        }
+
+        function renderTasks() {
+            const container = document.getElementById('task-list');
+            if (tasks.length === 0) { container.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><p>暂无任务，点击"新建转录"开始</p></div>'; return; }
+            container.innerHTML = tasks.map(task => {
+                const status = (task.status || '').toUpperCase();
+                const statusClass = { 'PENDING': 'status-pending', 'STARTED': 'status-processing', 'SUCCESS': 'status-completed', 'FAILURE': 'status-failed', 'RETRY': 'status-pending', 'REVOKED': 'status-failed' }[status] || 'status-pending';
+                const statusText = { 'PENDING': '⏳ 等待中', 'STARTED': '⚙️ 处理中', 'SUCCESS': '✅ 已完成', 'FAILURE': '❌ 失败', 'RETRY': '🔄 重试中', 'REVOKED': '🚫 已取消' }[status] || status;
+                const progress = task.progress?.progress || 0;
+                const step = task.progress?.step || '';
+                const message = task.progress?.message || '';
+                const allSteps = [{ key: 'downloading', name: '下载音视频', icon: '⬇️' }, { key: 'processing', name: '音频处理', icon: '🎵' }, { key: 'transcribing', name: '语音识别', icon: '🎤' }, { key: 'post_processing', name: 'AI后处理', icon: '🤖' }, { key: 'exporting', name: '导出文件', icon: '📁' }];
+                const currentStepIndex = allSteps.findIndex(s => s.key === step);
+                const currentStepNum = currentStepIndex >= 0 ? currentStepIndex + 1 : 0;
+                // Calculate elapsed time - use updated_at for completed/failed tasks
+                let elapsedTime = '';
+                if (task.created_at) { 
+                    try { 
+                        const created = new Date(task.created_at + 'Z');
+                        // For completed/failed tasks, use updated_at as end time
+                        const endTime = (status === 'SUCCESS' || status === 'FAILURE') && task.updated_at 
+                            ? new Date(task.updated_at + 'Z') 
+                            : new Date();
+                        const diffSec = Math.floor((endTime - created) / 1000);
+                        if (diffSec < 60) elapsedTime = `${diffSec}秒`;
+                        else if (diffSec < 3600) elapsedTime = `${Math.floor(diffSec / 60)}分${diffSec % 60}秒`;
+                        else elapsedTime = `${Math.floor(diffSec / 3600)}小时${Math.floor((diffSec % 3600) / 60)}分`;
+                    } catch (e) { elapsedTime = '未知'; } 
+                }
+                
+                // For completed tasks, show "已完成" instead of elapsed time in the header
+                const timeDisplay = status === 'SUCCESS' 
+                    ? `已完成 | 耗时: ${elapsedTime}` 
+                    : (status === 'FAILURE' 
+                        ? `已失败 | 耗时: ${elapsedTime}` 
+                        : `已运行: ${elapsedTime}`);
+                
+                let stepsIndicator = '';
+                // Determine current step based on progress percentage
+                let stepName = '处理中...';
+                let stepIcon = '⚙️';
+                if (progress < 25) { stepName = '下载音视频'; stepIcon = '⬇️'; }
+                else if (progress < 40) { stepName = '音频处理'; stepIcon = '🎵'; }
+                else if (progress < 65) { stepName = '语音识别'; stepIcon = '🎤'; }
+                else if (progress < 85) { stepName = 'AI后处理'; stepIcon = '🤖'; }
+                else { stepName = '导出文件'; stepIcon = '📁'; }
+                
+                if (status === 'STARTED') { stepsIndicator = `<div class="steps-indicator" style="margin: 0.75rem 0; padding: 0.75rem; background: var(--bg); border-radius: 8px;"><div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-size: 0.8125rem; color: var(--text-secondary);"><span>${stepIcon} ${stepName}</span><span style="margin-left: auto; color: var(--primary-light); font-weight: 600;">${progress}%</span></div><div class="progress-bar" style="height: 8px; background: var(--border);"><div class="progress-fill" style="width: ${progress}%; height: 100%; transition: width 0.3s ease;"></div></div><div class="progress-text" style="margin-top: 0.25rem; font-size: 0.75rem; color: var(--text-secondary);">${message || '处理中...'}</div></div>`; }
+                else if (status === 'PENDING') { stepsIndicator = `<div class="steps-indicator" style="margin: 0.75rem 0; padding: 0.75rem; background: var(--bg); border-radius: 8px;"><div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; color: var(--text-secondary);"><span>⏳ 等待 Worker 就绪...</span><span style="margin-left: auto;">队列中</span></div><div class="progress-bar" style="height: 6px; background: var(--border); margin-top: 0.5rem;"><div class="progress-fill" style="width: 5%; height: 100%; animation: pulse 2s infinite;"></div></div></div>`; }
+                else if (status === 'SUCCESS') { stepsIndicator = `<div class="steps-indicator" style="margin: 0.75rem 0; padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px; border: 1px solid var(--success);"><div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; color: var(--success);"><span>✅ 所有步骤已完成 (${allSteps.length}/${allSteps.length})</span><span style="margin-left: auto;">总耗时: ${elapsedTime}</span></div></div>`; }
+                return `<div class="task-item" id="task-${task.task_id}"><div class="task-header"><div class="task-info"><div class="task-id">ID: ${task.task_id.substring(0, 8)}... | ${timeDisplay}</div><div class="task-url">${task.url}</div></div><span class="task-status ${statusClass}">${statusText}</span></div>${stepsIndicator}<div class="task-actions">${status === 'SUCCESS' ? `<button class="task-action-btn" onclick="viewResult('${task.task_id}')">👁️ 查看结果</button><button class="task-action-btn" onclick="downloadResult('${task.task_id}')">⬇️ 下载</button>` : ''}<button class="task-action-btn" onclick="viewTaskDetail('${task.task_id}')">📋 详情</button><button class="task-action-btn" onclick="deleteTask('${task.task_id}')" style="color: var(--error);">🗑️ 删除</button></div></div>`;
+            }).join('');
+        }
+
+        async function viewResult(taskId) { try { const response = await fetch(`${API_BASE}/tasks/${taskId}`); const task = await response.json(); if ((task.status === 'success' || task.status === 'SUCCESS') && task.result) { currentResult = task.result; currentResult.task_id = task.task_id || taskId; renderResult(); document.getElementById('result-modal').classList.add('active'); } else { showToast('info', '任务尚未完成'); } } catch (err) { showToast('error', '加载失败：' + err.message); } }
+
+        function renderResult() {
+            if (!currentResult) return;
+            const dialogueEl = document.getElementById('result-dialogue');
+            if (currentResult.diarized_transcript?.turns) { dialogueEl.innerHTML = currentResult.diarized_transcript.turns.map(turn => `<div class="dialogue-turn"><div class="dialogue-speaker">${turn.speaker}</div><div class="dialogue-time">${turn.start_time}${turn.end_time ? ' - ' + turn.end_time : ''}</div><div class="dialogue-text">${turn.text}</div></div>`).join(''); }
+            else if (currentResult.final_text) { dialogueEl.innerHTML = `<pre style="white-space: pre-wrap;">${currentResult.final_text}</pre>`; }
+            else { dialogueEl.innerHTML = '<p style="color: var(--text-secondary);">无对话数据</p>'; }
+            const filesEl = document.getElementById('download-links');
+            if (currentResult.files && currentResult.task_id) { 
+                // Only show txt and md formats with direct download links
+                const formatLabels = { txt: 'TXT 纯文本', md: 'Markdown 文档' };
+                const formatOrder = ['md', 'txt'];
+                filesEl.innerHTML = formatOrder
+                    .filter(fmt => currentResult.files[fmt])
+                    .map(fmt => `<a href="${API_BASE}/tasks/${currentResult.task_id}/download?format=${fmt}" class="btn btn-success" style="justify-content: flex-start; margin-bottom: 0.5rem; display: block;">⬇️ 下载 ${formatLabels[fmt]}</a>`)
+                    .join(''); 
+            }
+            else { filesEl.innerHTML = '<p style="color: var(--text-secondary);">无可下载文件</p>'; }
+        }
+
+        function showResultTab(tab) { document.querySelectorAll('.result-tab').forEach(el => el.classList.remove('active')); event.target.classList.add('active'); document.getElementById('result-dialogue').style.display = tab === 'dialogue' ? 'block' : 'none'; document.getElementById('result-files').style.display = tab === 'files' ? 'block' : 'none'; }
+        function closeModal() { document.getElementById('result-modal').classList.remove('active'); }
+        async function downloadResult(taskId) { try { const response = await fetch(`${API_BASE}/tasks/${taskId}/download`); const data = await response.json(); if (data.files) { Object.entries(data.files).forEach(([format, url]) => { window.open(url, '_blank'); }); } } catch (err) { showToast('error', '下载失败：' + err.message); } }
+        async function viewTaskDetail(taskId) { try { const response = await fetch(`${API_BASE}/tasks/${taskId}`); const task = await response.json(); let detailHtml = `<div style="margin-bottom: 1rem;"><strong>任务ID:</strong> ${task.task_id}<br><strong>状态:</strong> ${task.status}<br><strong>平台:</strong> ${task.platform}<br><strong>URL:</strong> ${task.url}<br><strong>创建时间:</strong> ${new Date(task.created_at).toLocaleString()}<br></div>`; if (task.progress) { detailHtml += `<div style="margin-bottom: 1rem;"><strong>当前步骤:</strong> ${task.progress.step}<br><strong>进度:</strong> ${task.progress.progress}%<br><strong>消息:</strong> ${task.progress.message}<br></div>`; } if (task.result) { detailHtml += `<div style="margin-top: 1rem;"><strong>结果:</strong><pre style="background: var(--bg); padding: 1rem; border-radius: 8px; margin-top: 0.5rem; font-size: 0.75rem; max-height: 300px; overflow: auto;">${JSON.stringify(task.result, null, 2)}</pre></div>`; } if (task.error) { detailHtml += `<div style="margin-top: 1rem; color: var(--error);"><strong>错误:</strong> ${task.error}</div>`; } document.getElementById('result-dialogue').innerHTML = detailHtml; document.getElementById('result-summary').innerHTML = ''; document.getElementById('result-raw').innerHTML = ''; document.getElementById('result-files').innerHTML = ''; document.getElementById('result-modal').classList.add('active'); } catch (err) { showToast('error', '获取详情失败：' + err.message); } }
+        async function deleteTask(taskId) { if (!confirm('确定要删除这个任务吗？此操作不可恢复。')) return; const taskElement = document.getElementById(`task-${taskId}`); if (taskElement) { taskElement.style.opacity = '0.5'; taskElement.style.pointerEvents = 'none'; } try { const response = await fetch(`${API_BASE}/tasks/${taskId}`, { method: 'DELETE' }); if (response.ok || response.status === 204) { showToast('success', '任务已删除'); tasks = tasks.filter(t => t.task_id !== taskId); renderTasks(); updateStats(); } else if (response.status === 404) { showToast('info', '任务已不存在'); tasks = tasks.filter(t => t.task_id !== taskId); renderTasks(); updateStats(); } else { if (taskElement) { taskElement.style.opacity = '1'; taskElement.style.pointerEvents = ''; } const data = await response.json(); showToast('error', data.detail || '删除失败'); } } catch (err) { if (taskElement) { taskElement.style.opacity = '1'; taskElement.style.pointerEvents = ''; } showToast('error', '删除失败：' + err.message); } }
+        async function updateStats() { document.getElementById('stat-total').textContent = tasks.length; document.getElementById('stat-completed').textContent = tasks.filter(t => t.status === 'SUCCESS' || t.status === 'success').length; }
+        async function testAPI() { const resultEl = document.getElementById('test-result'); resultEl.innerHTML = '测试中...'; try { const response = await fetch('http://localhost:8000/health'); const data = await response.json(); resultEl.innerHTML = `<span style="color: var(--success);">✅ 连接成功: ${JSON.stringify(data)}</span>`; } catch (err) { resultEl.innerHTML = `<span style="color: var(--error);">❌ 连接失败: ${err.message}<br><small>请运行: python launcher.py</small></span>`; } }
+        function loadSample() { document.getElementById('url').value = 'https://www.xiaoyuzhoufm.com/episode/65e5c7b8a0b52d13a51b85d8'; document.getElementById('initial-prompt').value = '这是一期关于AI和未来科技的播客访谈'; document.getElementById('hotwords').value = 'ChatGPT, GPT-4, OpenAI, 深度学习'; }
+        function showToast(type, message) { const container = document.getElementById('toast-container'); const toast = document.createElement('div'); toast.className = `toast toast-${type}`; const icon = { success: '✅', error: '❌', info: 'ℹ️' }[type]; toast.innerHTML = `<span>${icon}</span><span>${message}</span>`; container.appendChild(toast); setTimeout(() => { toast.style.animation = 'slideIn 0.3s ease reverse'; setTimeout(() => toast.remove(), 300); }, 5000); }
+    </script>
+</body>
+</html>
